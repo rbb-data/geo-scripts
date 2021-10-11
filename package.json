@@ -1,0 +1,24 @@
+{
+  "name": "geo-scripts",
+  "version": "1.0.0",
+  "description": "Collection of node scripts for geo data manipulation",
+  "scripts": {
+    "create-geojson-mask": "node ./scripts/create-geojson-mask.js",
+    "geocode-data": "node ./scripts/geocode-data.js",
+    "convert-to-csv": "node ./scripts/convert-to-csv.js",
+    "convert-to-geojson": "node ./scripts/convert-to-geojson.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rbb-data/geo-scripts.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rbb-data/geo-scripts/issues"
+  },
+  "homepage": "https://github.com/rbb-data/geo-scripts#readme",
+  "dependencies": {
+    "@turf/turf": "^6.5.0",
+    "d3-dsv": "^3.0.1"
+  }
+}

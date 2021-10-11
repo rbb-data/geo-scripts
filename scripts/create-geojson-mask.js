@@ -1,14 +1,16 @@
 const fs = require('fs')
 const path = require('path')
 const turf = require('@turf/turf')
+
 const args = process.argv.slice(2)
 
 // Display a help message when appropriate
-const help = `Helper utility to create masks from GeoJSON files. Creates a large rectangular polygon and subtracts the given GeoJSON geometries. The result will be written to stdout
+const help = `
+  Helper utility to create masks from GeoJSON files. Creates a large rectangular polygon and subtracts the given GeoJSON geometries.
 
-Usage: create-geojson-mask [geojson-path] > result.geojson
+  Usage: create-geojson-mask geojson-path out-path
 
-  -h, --help  Displays this help message
+    -h, --help  Displays this help message
 `
 
 if (args.length === 0 || args[0] === '-h' || args[0] === '--help') {
@@ -19,4 +21,4 @@ if (args.length === 0 || args[0] === '-h' || args[0] === '--help') {
 // merge the input file into one polygon and invert it
 const input = JSON.parse(fs.readFileSync(path.resolve(args[0])))
 const unaryUnion = turf.union(...input.features)
-process.stdout.write(JSON.stringify(turf.mask(unaryUnion)))
+fs.writeFileSync(args[1], JSON.stringify(turf.mask(unaryUnion)))

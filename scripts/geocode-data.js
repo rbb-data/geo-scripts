@@ -1,8 +1,12 @@
+require('dotenv').config()
+
 const { dsvFormat, csvFormat } = require('d3-dsv')
 const fs = require('fs')
-const path = require('path')
 var rp = require('request-promise')
-const rawData = fs.readFileSync(path.join(__dirname, '../raw/raw_source_file.csv'), 'utf8')
+
+const args = process.argv.slice(2)
+
+const rawData = fs.readFileSync(args[0], 'utf8')
 
 function timeout (delay) {
   return new Promise(function (resolve, reject) {
@@ -20,7 +24,7 @@ const geocoded = csv.map(async (row, i) => {
   const options = {
     uri: 'https://api.openrouteservice.org/geocode/search',
     qs: {
-      api_key: process.env.REACT_APP_OPENROUTSERVICE_KEY,
+      api_key: process.env.OPENROUTSERVICE_KEY,
       'boundary.country': 'DE',
       'layers': 'localadmin,venue,locality'
     },
@@ -66,6 +70,6 @@ Promise.all(geocoded)
   .then(resolvedGeocoded => {
     const formated = csvFormat(resolvedGeocoded)
 
-    fs.writeFileSync(path.join(__dirname, '../raw/geocoded.csv'), formated, 'utf8')
+    fs.writeFileSync(args[1], formated, 'utf8')
     console.log('done')
   })

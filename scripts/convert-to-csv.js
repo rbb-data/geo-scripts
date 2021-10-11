@@ -1,7 +1,9 @@
 const { dsvFormat, csvFormat } = require('d3-dsv')
 const fs = require('fs')
-const path = require('path')
-const rawData = fs.readFileSync(path.join(__dirname, '../raw/geocoded.csv'), 'utf8')
+
+const args = process.argv.slice(2)
+
+const rawData = fs.readFileSync(args[0], 'utf8')
 
 const parser = dsvFormat(',')
 const csv = parser.parse(rawData)
@@ -14,8 +16,8 @@ const places = csv.map((row, idx) => ({
   lng: row.lng
 }))
 
-const formated = csvFormat(places)
+const formatted = csvFormat(places)
 
-fs.writeFileSync(path.join(__dirname, '../public/markers.csv'), formated, 'utf8')
+fs.writeFileSync(args[1], formatted, 'utf8')
 
 console.log('done')

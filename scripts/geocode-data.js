@@ -2,9 +2,13 @@ require('dotenv').config()
 
 const { dsvFormat, csvFormat } = require('d3-dsv')
 const fs = require('fs')
+const path = require('path')
 var rp = require('request-promise')
 
 const args = process.argv.slice(2)
+  .map((filename) => path.isAbsolute(filename)
+    ? filename
+    : path.join(__dirname, filename))
 
 const rawData = fs.readFileSync(args[0], 'utf8')
 

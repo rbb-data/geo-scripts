@@ -3,6 +3,9 @@ const path = require('path')
 const turf = require('@turf/turf')
 
 const args = process.argv.slice(2)
+  .map((filename) => path.isAbsolute(filename)
+    ? filename
+    : path.join(__dirname, filename))
 
 // Display a help message when appropriate
 const help = `

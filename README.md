@@ -1,8 +1,9 @@
 # geo-scripts
-Collection of node scripts for geo data manipulation
+
+**Collection of node scripts for geo data manipulation**
 
 These scripts have been moved here from the [starter](https://github.com/rbb-data/starter)
-(removed from the starter in pull request [81](https://github.com/rbb-data/starter/pull/81)).
+(removed from the starter in pull request [#81](https://github.com/rbb-data/starter/pull/81)).
 
 ### `npm run create-geojson-mask <in.geojson> <out.geojson>`
 

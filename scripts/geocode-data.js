@@ -1,79 +1,104 @@
-require('dotenv').config()
+#!/usr/bin/env node
 
-const { dsvFormat, csvFormat } = require('d3-dsv')
-const fs = require('fs')
-const path = require('path')
-var rp = require('request-promise')
+require("dotenv").config();
 
-const args = process.argv.slice(2)
-  .map((filename) => path.isAbsolute(filename)
-    ? filename
-    : path.join(__dirname, filename))
+const { csvParse, csvFormat } = require("d3-dsv");
+const fs = require("fs");
+const path = require("path");
+var rp = require("request-promise");
 
-const rawData = fs.readFileSync(args[0], 'utf8')
+const transformPath = (filename) =>
+  path.isAbsolute(filename) ? filename : path.join(__dirname, filename);
 
-function timeout (delay) {
-  return new Promise(function (resolve, reject) {
-    setTimeout(resolve, delay)
+var { argv } = require("yargs")
+  .usage("Usage: $0 --in *.csv --out *.csv")
+  .option("in", {
+    describe: "Input file in csv format",
+    type: "string",
   })
+  .option("out", {
+    describe: "Geo-coded output file",
+    type: "string",
+  })
+  .option("loc-col", {
+    describe: "Name of the column that contains locations",
+    type: "string",
+  })
+  .demandOption(["in", "out", "loc-col"])
+  .middleware((argv) => {
+    return {
+      in: transformPath(argv.in),
+      out: transformPath(argv.out),
+    };
+  });
+
+function timeout(delay) {
+  return new Promise(function (resolve, reject) {
+    setTimeout(resolve, delay);
+  });
 }
 
-const parser = dsvFormat(',')
-const csv = parser.parse(rawData)
-
-const ADDRESS_KEY = 'Ort'
+const rawData = fs.readFileSync(argv.in, "utf8");
+const data = csvParse(rawData);
+const nRows = data.length;
 
 // csv.length = 2
-const geocoded = csv.map(async (row, i) => {
+const geoCodedData = data.map(async (row, i) => {
   const options = {
-    uri: 'https://api.openrouteservice.org/geocode/search',
+    uri: "https://api.openrouteservice.org/geocode/search",
     qs: {
       api_key: process.env.OPENROUTSERVICE_KEY,
-      'boundary.country': 'DE',
-      'layers': 'localadmin,venue,locality'
+      "boundary.country": "DE",
+      layers: "address",
     },
     headers: {
-      'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8'
+      Accept:
+        "application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8",
     },
-    json: true // Automatically parses the JSON string in the response
-  }
+    json: true, // Automatically parses the JSON string in the response
+  };
 
   try {
     const request = {
       ...options,
-      qs: { ...options.qs, text: row[ADDRESS_KEY] }
-    }
+      qs: { ...options.qs, text: row[argv.locCol] },
+    };
 
     // try not to hit the api limit
-    await timeout(i * 2000)
+    await timeout(i * 2000);
 
-    if (row[ADDRESS_KEY] === '') throw new Error(`Ort nicht angegeben: ${i}`)
+    if (row[argv.locCol] === "") throw new Error(`Ort nicht angegeben: ${i}`);
 
-    const addressRes = await rp(request)
+    const addressRes = await rp(request);
 
-    if (!addressRes.features[0]) throw new Error(`Ort ${row[ADDRESS_KEY]} nicht gefunden`)
+    if (!addressRes.features[0])
+      throw new Error(`Ort ${row[argv.locCol]} nicht gefunden`);
 
-    console.log(i, row[ADDRESS_KEY])
+    console.log(
+      i + 1,
+      "/",
+      nRows,
+      row[argv.locCol],
+      addressRes.features[0].geometry.coordinates
+    );
 
     return {
       ...row,
       lat: addressRes.features[0].geometry.coordinates[1],
-      lng: addressRes.features[0].geometry.coordinates[0]
-    }
+      lng: addressRes.features[0].geometry.coordinates[0],
+    };
   } catch (e) {
-    console.error(e.message)
+    console.error(e.message);
     return {
       ...row,
       lat: null,
-      lng: null
-    }
+      lng: null,
+    };
   }
-})
+});
 
-Promise.all(geocoded)
-  .then(resolvedGeocoded => {
-    const formated = csvFormat(resolvedGeocoded)
+Promise.all(geoCodedData).then((resolvedGeoCoded) => {
+  const formatted = csvFormat(resolvedGeoCoded);
 
-    fs.writeFileSync(args[1], formated, 'utf8')
-    console.log('done')
-  })
+  fs.writeFileSync(argv.out, formatted, "utf8");
+});
